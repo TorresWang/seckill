@@ -1,5 +1,6 @@
 package com.seckill.controller;
 
+import com.alibaba.druid.util.StringUtils;
 import com.seckill.controller.viewObject.UserVO;
 import com.seckill.error.BusinessException;
 import com.seckill.error.EmBusinessError;
@@ -22,6 +23,7 @@ import java.util.Random;
  */
 @Controller("user")
 @RequestMapping("/user")
+@CrossOrigin
 public class UserController extends BaseController {
     @Autowired
     private UserService userService;
@@ -29,8 +31,24 @@ public class UserController extends BaseController {
     @Autowired
     private HttpServletRequest httpServletRequest;
 
+    //用户注册机接口
+    public CommonReturnType register(@RequestParam(name = "telephone") String telephone,
+                            @RequestParam(name = "otpCode") String otpCode,
+                            @RequestParam(name = "name") String name,
+                            @RequestParam(name = "gender") Integer gender,
+                            @RequestParam(name = "age") Integer age) throws BusinessException{
+            //验证手机号和对应的otpCode是否符合
+            String inSessionOtpCode = (String)httpServletRequest.getSession().getAttribute(telephone);
+            if(!StringUtils.equals(inSessionOtpCode,otpCode)){
+                throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,"短信验证码不符");
+            }
+            //用户注册流程
+
+    }
+
+
     //用户获取otp短信接口
-    @RequestMapping("/getOtp")
+    @RequestMapping(value = "/getOtp",method = {RequestMethod.POST},consumes = {CONTENT_TYPE_FORMED})
     @ResponseBody
     public CommonReturnType getOtp(@RequestParam(name = "telephone") String telephone){
         //需要按照一定的规则生产OTP验证码
@@ -41,10 +59,10 @@ public class UserController extends BaseController {
 
         //将OTP验证码同对应用户的手机号关联，企业级应用会做到redis中。
         // 此处使用httpSession的方式绑定用户的手机号与OTPCODE
-
+        httpServletRequest.getSession().setAttribute(telephone,otpCode);
 
         //将otp验证码通过短信通道发送给用户，此项目省略
-
+        System.out.println("telephone = "+telephone+"& otpCode ="+otpCode);
         return CommonReturnType.create(null);
     }
 

@@ -4,6 +4,8 @@ import com.seckill.dao.UserDOMapper;
 import com.seckill.dao.UserPasswordDOMapper;
 import com.seckill.dataObject.UserDO;
 import com.seckill.dataObject.UserPasswordDO;
+import com.seckill.error.BusinessException;
+import com.seckill.error.EmBusinessError;
 import com.seckill.service.UserService;
 import com.seckill.service.model.UserModel;
 import org.springframework.beans.BeanUtils;
@@ -31,6 +33,13 @@ public class UserServiceImpl implements UserService {
         }
         UserPasswordDO userPasswordDO = userPasswordDOMapper.selectByUserId(userDO.getId());
         return convertFromDataObject(userDO,userPasswordDO);
+    }
+
+    @Override
+    public void register(UserModel userModel) throws BusinessException{
+        if(userModel == null){
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+        }
     }
 
     private UserModel convertFromDataObject(UserDO userDO,UserPasswordDO userPasswordDO){
