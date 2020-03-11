@@ -7,6 +7,7 @@ import com.seckill.error.EmBusinessError;
 import com.seckill.response.CommonReturnType;
 import com.seckill.service.UserService;
 import com.seckill.service.model.UserModel;
+import org.apache.tomcat.util.security.MD5Encoder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,18 +33,29 @@ public class UserController extends BaseController {
     private HttpServletRequest httpServletRequest;
 
     //用户注册机接口
+    @RequestMapping(value="/register",method = {RequestMethod.POST},consumes = {CONTENT_TYPE_FORMED})
+    @ResponseBody
     public CommonReturnType register(@RequestParam(name = "telephone") String telephone,
                             @RequestParam(name = "otpCode") String otpCode,
                             @RequestParam(name = "name") String name,
                             @RequestParam(name = "gender") Integer gender,
-                            @RequestParam(name = "age") Integer age) throws BusinessException{
-            //验证手机号和对应的otpCode是否符合
-            String inSessionOtpCode = (String)httpServletRequest.getSession().getAttribute(telephone);
-            if(!StringUtils.equals(inSessionOtpCode,otpCode)){
-                throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,"短信验证码不符");
-            }
-            //用户注册流程
-
+                            @RequestParam(name = "age") Integer age,
+                            @RequestParam(name = "password") String password) throws BusinessException{
+        //验证手机号和对应的otpCode是否符合
+        String inSessionOtpCode = (String)httpServletRequest.getSession().getAttribute(telephone);
+        if(!StringUtils.equals(inSessionOtpCode,otpCode)){
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,"短信验证码不符");
+        }
+        //用户注册流程
+        UserModel userModel = new UserModel();
+        userModel.setName(name);
+        userModel.setGender(gender);
+        userModel.setTelephone(telephone);
+        userModel.setAge(age);
+        userModel.setRegisterMode("bypPhone");
+        userModel.setEncrptPassword(MD5Encoder.encode(password.getBytes()));
+        userService.register(userModel);
+        return CommonReturnType.create(null);
     }
 
 
